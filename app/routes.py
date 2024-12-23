@@ -1,78 +1,108 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session, jsonify
 from flask_login import login_user, current_user, logout_user
 from app.forms import RegistrationForm, LoginForm
 from app.blockchain import Blockchain
 from app.secret import SecretManager
 from app.transaction import Transaction
+from datetime import datetime
 
 main = Blueprint('main', __name__)
 blockchain = Blockchain()
 blockchain.load_blockchain()  # Load the blockchain from the JSON file
 secret_manager = SecretManager()  # Create an instance of SecretManager
 
+# Initialize an empty list to store contributions (for demonstration purposes)
+contributions = []
+
+# Phase details for project phases
+phase_details = {
+    "Planning": {
+        "description": "This phase involves defining the project scope and objectives.",
+        "tasks": ["Define project goals", "Identify stakeholders", "Create a project timeline"],
+    },
+    "Design": {
+        "description": "In this phase, detailed designs and specifications are created.",
+        "tasks": ["Create architectural designs", "Develop engineering specifications"],
+    },
+    "Construction": {
+        "description": "The actual construction of the project takes place in this phase.",
+        "tasks": ["Build structures", "Install systems and equipment"],
+    },
+    "Commissioning": {
+        "description": "Testing and preparing the project for operation.",
+        "tasks": ["Test systems", "Ensure compliance with regulations"],
+    },
+    "Operational": {
+        "description": "The project is now operational and producing outputs.",
+        "tasks": ["Monitor performance", "Conduct maintenance"],
+    },
+    "Maintenance": {
+        "description": "Ongoing maintenance to ensure project longevity.",
+        "tasks": ["Perform regular inspections", "Address issues as they arise"],
+    },
+    "Evaluation": {
+        "description": "Assessing the project's outcomes and sustainability.",
+        "tasks": ["Evaluate project success", "Report findings"],
+    },
+}
 
 @main.route('/')
 def index():
     return render_template('index.html')
 
+@main.route('/project_overview')
+def project_overview():
+    """Overview of the project with goals and timeline."""
+    return render_template('project_overview.html')
 
-@main.route('/register', methods=['GET', 'POST'])
-def register():
-    form = RegistrationForm()  # Create an instance of the RegistrationForm
-    if form.validate_on_submit():
-        username = form.username.data
-        profession = form.profession.data  # Get the profession from the form
-        
-        # Generate a new secret phrase
-        secret_phrase = secret_manager.generate_secret_phrase()
-        
-        # Encrypt the secret phrase
-        encrypted_secret_phrase = secret_manager.encrypt_secret_phrase(secret_phrase)
-        
-        # Generate public/private key pair from the secret phrase
-        public_key, private_key = secret_manager.generate_key_from_secret_phrase(secret_phrase)
-        
-        # Check if the username is available
-        if not blockchain.is_username_available(username):
-            flash(f"Username '{username}' is already taken.", 'danger')
-            return render_template('register.html', form=form)  # Pass the form back to the template
+@main.route('/project_phases')
+def project_phases():
+    """List all project phases with their status."""
+    phases = [
+        {"name": "Planning", "status": "In Progress"},
+        {"name": "Design", "status": "Not Started"},
+        {"name": "Construction", "status": "Not Started"},
+        {"name": "Commissioning", "status": "Not Started"},
+        {"name": "Operational", "status": "Not Started"},
+        {"name": "Maintenance", "status": "Not Started"},
+        {"name": "Evaluation", "status": "Not Started"},
+    ]
+    return render_template('project_phases.html', phases=phases)
 
-        # Create the user registration transaction
-        user_registration_transaction = blockchain.add_transaction(
-            sender=username,
-            recipient='SYSTEM',
-            operation='USER_REGISTRATION',
-            data={
-                "encrypted_secret_phrase": encrypted_secret_phrase,
-                "public_key": public_key.decode('utf-8'),
-                "profession": profession
-            }
-        )
+@main.route('/project_phases/<phase_name>')
+def project_phase_details(phase_name):
+    """Detailed view of a specific project phase."""
+    phase_info = phase_details.get(phase_name)
+    if phase_info:
+        return render_template('project_phases_details.html', phase_name=phase_name, phase_info=phase_info)
+    else:
+        flash('Phase not found.', 'danger')
+        return redirect(url_for('main.project_phases'))
 
-        # Add the user registration transaction to a new block
-        blockchain.add_block(user_registration_transaction)
+@main.route('/contribute', methods=['GET', 'POST'])
+def contribute():
+    """Handle user contributions to the project."""
+    if 'username' not in session:
+        flash('You need to log in or register to contribute.', 'warning')
+        return redirect(url_for('main.login'))  # Redirect to the login page
 
-        # Create a CREDIT transaction to initialize the user's balance with 10 tokens
-        credit_transaction = blockchain.add_transaction(
-            sender='SYSTEM',
-            recipient=username,
-            operation='CREDIT',
-            data={'amount': 10}
-        )
-
-        # Add the credit transaction to a new block
-        blockchain.add_block(credit_transaction)
-
-        # Flash message with the secret phrase and security recommendation
-        flash(f"Registration successful! Your initial balance is 10 tokens.", 'success')
+    if request.method == 'POST':
+        contribution = request.form.get('contribution')
         
-        # Store the secret phrase in the session
-        session['secret_phrase'] = secret_phrase  # Store the secret phrase in the session
+        # Logic to save the contribution to the blockchain
+        new_contribution = {
+            "user": session['username'],
+            "text": contribution
+        }
         
-        # Redirect to the secret key explanation page
-        return redirect(url_for('main.secret_key_explanation'))  # Redirect to the explanation page
-            
-    return render_template('register.html', form=form)  # Pass the form to the template
+        blockchain.add_contribution(new_contribution)  # Implement this method in your Blockchain class
+        
+        flash('Your contribution has been submitted successfully!', 'success')
+        return redirect(url_for('main.contribute'))
+    
+    # Fetch contributions from the blockchain
+    contributions = blockchain.get_user_contributions(session['username'])  # Implement this method
+    return render_template('contribute.html', contributions=contributions)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -81,63 +111,28 @@ def login():
         username = form.username.data
         secret_phrase = form.secret_phrase.data
         
-        # Retrieve user data using the correct method
-        user_data = blockchain.get_user_data(username)
+        # Retrieve user data from the blockchain
+        user_data = blockchain.get_user_data(username)  # Implement this method in your Blockchain class
         
         if user_data:
-            # Retrieve the encrypted secret phrase and profession
             encrypted_secret_phrase = user_data.get('encrypted_secret_phrase')
-            profession = user_data.get('profession')  # Retrieve the profession
+            profession = user_data.get('profession')
             
-            # Debugging output
-            print(f"Retrieved Encrypted Secret Phrase: '{encrypted_secret_phrase}'")
-            print(f"Retrieved Profession: '{profession}'")
-            print(f"Provided Secret Phrase: '{secret_phrase}'")
+            # Decrypt the stored encrypted secret phrase
+            decrypted_secret_phrase = secret_manager.decrypt_secret_phrase(encrypted_secret_phrase)
             
-            try:
-                # Decrypt the stored encrypted secret phrase
-                decrypted_secret_phrase = secret_manager.decrypt_secret_phrase(encrypted_secret_phrase)
-                
-                # Debugging: Print the decrypted secret phrase
-                print(f"Decrypted Secret Phrase: '{decrypted_secret_phrase}'")
-                
-                # Verify the secret phrase
-                if decrypted_secret_phrase == secret_phrase:
-                    session['username'] = username
-                    session['profession'] = profession  # Store the profession in the session
-                    flash('Login successful! Welcome back.', 'success')
-                    
-                    # Redirect to the appropriate dashboard based on profession
-                    return redirect_to_dashboard(profession)
-                else:
-                    flash('Invalid secret phrase. Please try again.', 'danger')
-            except Exception as e:
-                print(f"Decryption error: {e}")
-                flash('An error occurred during login. Please try again.', 'danger')
+            # Verify the secret phrase
+            if decrypted_secret_phrase == secret_phrase:
+                session['username'] = username
+                session['profession'] = profession
+                flash('Login successful! Welcome back.', 'success')
+                return redirect_to_dashboard(profession)
+            else:
+                flash('Invalid secret phrase. Please try again.', 'danger')
         else:
             flash('Invalid username. Please try again.', 'danger')
     
     return render_template('login.html', form=form)
-
-def get_user_data(username):
-    """Retrieve user data from the blockchain."""
-    user_data = blockchain.get_user_data(username)
-    return user_data
-
-def validate_secret_phrase(encrypted_secret_phrase, provided_secret_phrase):
-    """Validate the provided secret phrase against the stored encrypted one."""
-    return encrypted_secret_phrase and secret_manager.decrypt_secret_phrase(encrypted_secret_phrase) == provided_secret_phrase
-
-def redirect_to_dashboard(profession):
-    """Redirect to the appropriate dashboard based on the user's profession."""
-    if profession == 'civil_engineer':
-        return redirect(url_for('main.civil_engineer_dashboard'))
-    elif profession == 'mechanical_engineer':
-        return redirect(url_for('main.mechanical_engineer_dashboard'))
-    elif profession == 'electronics_engineer':
-        return redirect(url_for('main.electronics_engineer_dashboard'))
-    else:
-        return redirect(url_for('main.dashboard'))  # Default dashboard if profession is unknown
 
 @main.route('/logout')
 def logout():
@@ -157,156 +152,16 @@ def user_dashboard():
     # Redirect to the appropriate dashboard based on profession
     return redirect_to_dashboard(profession)
 
-@main.route('/report_carbon_emission')
-def report_carbon_emission():
-    if request.method == 'POST':
-        amount = request.form.get('amount', type=float)
-        emission_source = request.form.get('emission_source')
-        activity_type = request.form.get('activity_type')
-        compliance_status = request.form.get('compliance_status')
-        reporting_period = request.form.get('reporting_period')
-
-        # Determine the user's profession
-        profession = session.get('profession')
-
-        # Create a carbon emission transaction based on the profession
-        if profession == 'civil engineer':
-            carbon_emission_transaction = blockchain.add_civil_engineering_transaction(
-                sender=session['username'],
-                recipient='DID:example:environmentalAgency',
-                amount=amount,
-                emission_source=emission_source,
-                activity_type=activity_type,
-                compliance_status=compliance_status,
-                reporting_period=reporting_period
-            )
-        elif profession == 'mechanical engineer':
-            carbon_emission_transaction = blockchain.add_mechanical_engineering_transaction(
-                sender=session['username'],
-                recipient='DID:example:environmentalAgency',
-                amount=amount,
-                emission_source=emission_source,
-                activity_type=activity_type,
-                compliance_status=compliance_status,
-                reporting_period=reporting_period
-            )
-        elif profession == 'electronics engineer':
-            carbon_emission_transaction = blockchain.add_electronics_engineering_transaction(
-                sender=session['username'],
-                recipient='DID:example:environmentalAgency',
-                amount=amount,
-                emission_source=emission_source,
-                activity_type=activity_type,
-                compliance_status=compliance_status,
-                reporting_period=reporting_period
-            )
-        else:
-            flash('Invalid profession. Unable to report emissions.', 'danger')
-            return redirect(url_for('main.civil_engineer_dashboard'))
-
-        # Add the transaction to the blockchain
-        blockchain.add_transaction(carbon_emission_transaction)
-        flash('Carbon emission reported successfully!', 'success')
+def redirect_to_dashboard(profession):
+    """Redirect to the appropriate dashboard based on the user's profession."""
+    if profession == 'civil_engineer':
         return redirect(url_for('main.civil_engineer_dashboard'))
-
-    return render_template('civil_engineer_dashboard.html', username=session['username'])
-
-@main.route('/engineer_dashboard')
-def engineer_dashboard():
-    if 'username' not in session:
-        flash('You need to log in first.', 'danger')
-        return redirect(url_for('main.login'))
-    
-    username = session['username']
-    return render_template('engineer_dashboard.html', username=username)
-
-@main.route('/manager_dashboard')
-def manager_dashboard():
-    if 'username' not in session:
-        flash('You need to log in first.', 'danger')
-        return redirect(url_for('main.login'))
-    
-    username = session['username']
-    return render_template('manager_dashboard.html', username=username)
-
-@main.route('/analyst_dashboard')
-def analyst_dashboard():
-    if 'username' not in session:
-        flash('You need to log in first.', 'danger')
-        return redirect(url_for('main.login'))
-    
-    username = session['username']
-    return render_template('analyst_dashboard.html', username=username)
-
-@main.route('/dashboard')
-def dashboard():
-    if 'username' not in session:
-        flash('You need to log in first.', 'danger')
-        return redirect(url_for('main.login'))
-    
-    profession = session['profession']
-    
-    if profession == 'civil engineer':
-        return redirect(url_for('main.civil_engineer_dashboard'))
-    elif profession == 'mechanical engineer':
+    elif profession == 'mechanical_engineer':
         return redirect(url_for('main.mechanical_engineer_dashboard'))
-    elif profession == 'electronics engineer':
+    elif profession == 'electronics_engineer':
         return redirect(url_for('main.electronics_engineer_dashboard'))
     else:
-        flash('Invalid profession. Unable to access dashboard.', 'danger')
-        return redirect(url_for('main.index'))
-
-@main.route('/civil_engineer_dashboard')
-def civil_engineer_dashboard():
-    if 'username' not in session:
-        flash('You need to log in first.', 'danger')
-        return redirect(url_for('main.login'))
-    
-    username = session['username']
-    return render_template('civil_engineer_dashboard.html', username=username)
-
-@main.route('/mechanical_engineer_dashboard')
-def mechanical_engineer_dashboard():
-    if 'username' not in session:
-        flash('You need to log in first.', 'danger')
-        return redirect(url_for('main.login'))
-    
-    username = session['username']
-    return render_template('mechanical_engineer_dashboard.html', username=username)
-
-@main.route('/electronics_engineer_dashboard')
-def electronics_engineer_dashboard():
-    if 'username' not in session:
-        flash('You need to log in first.', 'danger')
-        return redirect(url_for('main.login'))
-    
-    username = session['username']
-    return render_template('electronics_engineer_dashboard.html', username=username)
-
-@main.route('/secret_key_explanation')
-def secret_key_explanation():
-    secret_phrase = session.get('secret_phrase')  # Get the secret phrase from the session
-    return render_template('secret_key_explanation.html', secret_phrase=secret_phrase)
-
-@main.route('/view_blockchain')
-def view_blockchain():
-    # Placeholder for viewing the blockchain
-    return render_template('view_blockchain.html')  # Create this template later
-
-@main.route('/create_report')
-def create_report():
-    # Placeholder for creating reports
-    return render_template('create_report.html')  # Create this template later
-
-@main.route('/submit_carbon_emission')
-def submit_carbon_emission():
-    # Placeholder for submitting carbon emissions
-    return render_template('report_carbon_emission.html')  # Create this template later
-
-@main.route('/create_project')
-def create_project():
-    # Placeholder for creating a project
-    return render_template('create_project.html')  # Create this template later
+        return redirect(url_for('main.dashboard'))  # Default dashboard if profession is unknown
 
 @main.route('/contact_us', methods=['GET', 'POST'])
 def contact_us():
@@ -322,9 +177,111 @@ def contact_us():
 
     return render_template('contact_us.html')
 
-@main.route('/view_balance_history')
-def view_balance_history():
-    # Placeholder for balance history logic
-    # You can retrieve the balance history from the blockchain and pass it to the template
-    return render_template('balance_history.html')  # Create this template later
+@main.route('/carbon_emission_report')
+def carbon_emission_report():
+    """Display the carbon emission report."""
+    return render_template('carbon_emission_report.html')
+
+@main.route('/engineer_dashboard')
+def engineer_dashboard():
+    if 'username' not in session:
+        flash('You need to log in first.', 'danger')
+        return redirect(url_for('main.login'))
+    
+    username = session['username']
+    profession = session['profession']
+    
+    return render_template('engineer_dashboard.html', username=username, profession=profession)
+
+@main.route('/update_profile', methods=['POST'])
+def update_profile():
+    """Update user profile settings."""
+    notification_settings = request.form.get('notification_settings')
+    
+    # Logic to update the user's notification settings in the database
+    # Example: user = User.query.get(session['user_id'])
+    # user.notification_settings = notification_settings
+    # db.session.commit()
+    
+    flash('Profile settings updated successfully!', 'success')
+    return redirect(url_for('main.profile'))
+
+@main.route('/profile')
+def profile():
+    """Display the user profile."""
+    user_data = blockchain.get_user_data(session['username'])  # Fetch user data from blockchain
+    contributions = blockchain.get_user_contributions(session['username'])  # Fetch contributions
+    return render_template('profile.html', contributions=contributions, user_data=user_data)
+
+@main.route('/register', methods=['GET', 'POST'])
+def register():
+    print("Register route called")  # Debugging output
+    form = RegistrationForm()
+    print("Form data:", request.form)  # Debugging output
+    if form.validate_on_submit():
+        print("Form validated")  # Debugging output
+        try:
+            username = form.username.data
+            secret_phrase = form.secret_phrase.data
+            profession = form.profession.data
+            
+            print(f"Attempting to register user: {username}")  # Debugging output
+
+            # Check if the username is already taken
+            if not blockchain.is_username_available(username):
+                flash('Username is already taken. Please choose a different one.', 'danger')
+                return render_template('register.html', form=form)
+
+            # Logic to save the new user to the blockchain
+            encrypted_secret = secret_manager.encrypt_secret_phrase(secret_phrase)
+            
+            # Append the new user to the blockchain
+            success, message = blockchain.add_user(username, encrypted_secret, profession)  # Use the updated method
+            print(message)  # Log the message returned from add_user
+            
+            if not success:
+                flash('An error occurred during registration. Please try again.', 'danger')
+                return render_template('register.html', form=form)
+
+            print(f"User {username} registered successfully.")  # Debugging output
+            flash('Registration successful! Please log in.', 'success')
+            return redirect(url_for('main.login'))
+        except Exception as e:
+            print(f"Error during registration: {e}")  # Debugging output
+            flash('An error occurred during registration. Please try again.', 'danger')
+    else:
+        print("Form errors:", form.errors)  # Debugging output
+    
+    return render_template('register.html', form=form)
+
+@main.route('/create_project', methods=['GET', 'POST'])
+def create_project():
+    """Handle the creation of a new project."""
+    if request.method == 'POST':
+        project_name = request.form.get('project_name')
+        description = request.form.get('description')
+
+        # Check if the project name already exists
+        existing_project = blockchain.get_project_by_name(project_name)  # Implement this method
+        if existing_project:
+            flash('A project with this name already exists. Please choose a different name.', 'danger')
+            return render_template('create_project.html')
+
+        # Logic to save the new project to the blockchain
+        new_project = {
+            "project_name": project_name,
+            "description": description,
+            "created_by": session['username'],
+            "timestamp": datetime.now().isoformat()
+        }
+
+        # Append the new project to the blockchain
+        blockchain.add_project(new_project)
+
+        flash('Project created successfully!', 'success')
+        return redirect(url_for('main.project_overview'))
+
+    return render_template('create_project.html')
+
+
   

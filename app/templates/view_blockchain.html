@@ -1,8 +1,39 @@
 {% extends "base.html" %}
 
-{% block title %}View Blockchain{% endblock %}
+{% block title %}Blockchain Explorer{% endblock %}
 
 {% block content %}
-<h1>View Blockchain</h1>
-<p>This feature is coming soon!</p>
+<h2 class="mb-4">Blockchain Explorer</h2>
+<div class="accordion" id="blockchainAccordion">
+    {% for block in chain %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+                    Block #{{ block.index }} - Hash: {{ block.hash[:8] }}...
+                </button>
+            </h2>
+            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#blockchainAccordion">
+                <div class="accordion-body">
+                    <p><strong>Previous Hash:</strong> {{ block.previous_hash }}</p>
+                    <p><strong>Timestamp:</strong> {{ block.timestamp }}</p>
+                    <h5>Transactions:</h5>
+                    <ul class="list-group">
+                        {% for transaction in block.transactions %}
+                            <li class="list-group-item">
+                                <p><strong>Sender:</strong> {{ transaction.sender }}</p>
+                                <p><strong>Recipient:</strong> {{ transaction.recipient }}</p>
+                                <p><strong>Operation:</strong> {{ transaction.operation }}</p>
+                                <p><strong>Data:</strong> {{ transaction.data }}</p>
+                                <p><strong>State:</strong> {{ transaction.state }}</p>
+                                <p><strong>Timestamp:</strong> {{ transaction.timestamp }}</p>
+                            </li>
+                        {% else %}
+                            <li class="list-group-item">No transactions in this block.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
 {% endblock %}

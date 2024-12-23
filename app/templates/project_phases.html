@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Project Phases{% endblock %}
+
+{% block content %}
+<h1>Project Phases</h1>
+<p>Below is a list of all project phases along with their current status.</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Phase</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><a href="{{ url_for('main.project_phase_details', phase_name='Planning') }}">Planning</a></td>
+            <td>In Progress</td>
+            <td>
+                <a class="btn btn-primary" href="{{ url_for('main.contribute') }}">Contribute</a>
+            </td>
+        </tr>
+        <tr>
+            <td><a href="{{ url_for('main.project_phase_details', phase_name='Design') }}">Design</a></td>
+            <td>Not Started</td>
+            <td>
+                <a class="btn btn-primary" href="{{ url_for('main.contribute') }}">Contribute</a>
+            </td>
+        </tr>
+        <tr>
+            <td><a href="{{ url_for('main.project_phase_details', phase_name='Construction') }}">Construction</a></td>
+            <td>Not Started</td>
+            <td>
+                <a class="btn btn-primary" href="{{ url_for('main.contribute') }}">Contribute</a>
+            </td>
+        </tr>
+        <tr>
+            <td><a href="{{ url_for('main.project_phase_details', phase_name='Commissioning') }}">Commissioning</a></td>
+            <td>Not Started</td>
+            <td>
+                <a class="btn btn-primary" href="{{ url_for('main.contribute') }}">Contribute</a>
+            </td>
+        </tr>
+        <tr>
+            <td><a href="{{ url_for('main.project_phase_details', phase_name='Operational') }}">Operational</a></td>
+            <td>Not Started</td>
+            <td>
+                <a class="btn btn-primary" href="{{ url_for('main.contribute') }}">Contribute</a>
+            </td>
+        </tr>
+        <tr>
+            <td><a href="{{ url_for('main.project_phase_details', phase_name='Maintenance') }}">Maintenance</a></td>
+            <td>Not Started</td>
+            <td>
+                <a class="btn btn-primary" href="{{ url_for('main.contribute') }}">Contribute</a>
+            </td>
+        </tr>
+        <tr>
+            <td><a href="{{ url_for('main.project_phase_details', phase_name='Evaluation') }}">Evaluation</a></td>
+            <td>Not Started</td>
+            <td>
+                <a class="btn btn-primary" href="{{ url_for('main.contribute') }}">Contribute</a>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<a href="{{ url_for('main.project_overview') }}" class="btn btn-secondary">Back to Project Overview</a>
+{% endblock %}

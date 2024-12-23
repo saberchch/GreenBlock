@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block content %}
+<h1>User Profile</h1>
+
+<p><strong>Username:</strong> {{ session.username }}</p>
+<p><strong>Role:</strong> {{ session.profession | capitalize }}</p>
+
+<h3>Contribution History</h3>
+<ul class="list-group">
+    {% if contributions %}
+        {% for contribution in contributions %}
+            <li class="list-group-item">{{ contribution }}</li>
+        {% endfor %}
+    {% else %}
+        <li class="list-group-item">No contributions made yet.</li>
+    {% endif %}
+</ul>
+
+<h3>Settings</h3>
+<form method="POST" action="{{ url_for('main.update_profile') }}">
+    <div class="form-group">
+        <label for="notification_settings">Notification Settings:</label>
+        <select id="notification_settings" name="notification_settings" class="form-control">
+            <option value="enabled">Enabled</option>
+            <option value="disabled">Disabled</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Update Settings</button>
+</form>
+
+<a href="{{ url_for('main.logout') }}" class="btn btn-danger">Logout</a>
+{% endblock %} 

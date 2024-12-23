@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Engineer Dashboard{% endblock %}
+
+{% block content %}
+<h1>{{ session.profession | capitalize }} Engineer Dashboard</h1>
+
+<p>Welcome, {{ session.username }}! Here are your upcoming tasks and important resources.</p>
+
+<h3>Upcoming Tasks</h3>
+<ul class="list-group">
+    <li class="list-group-item">Review project plans for the upcoming phase.</li>
+    <li class="list-group-item">Submit your feedback on the design documents.</li>
+    <li class="list-group-item">Prepare for the construction kickoff meeting.</li>
+</ul>
+
+<h3>Important Resources</h3>
+<ul class="list-group">
+    <li class="list-group-item"><a href="#">Project Specifications Document</a></li>
+    <li class="list-group-item"><a href="#">Safety Guidelines for Construction</a></li>
+    <li class="list-group-item"><a href="#">Engineering Standards and Practices</a></li>
+</ul>
+
+<h3>Notifications</h3>
+<div class="alert alert-warning" role="alert">
+    <strong>Reminder:</strong> The Planning phase is currently in progress. Please ensure all tasks are completed by the deadline.
+</div>
+
+<a href="{{ url_for('main.project_phases') }}" class="btn btn-secondary">View Project Phases</a>
+{% endblock %} 

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Carbon Emission Report{% endblock %}
+
+{% block content %}
+<h1>Carbon Emission Report</h1>
+
+<p>This page provides an overview of carbon emissions reported during each project phase.</p>
+
+<h3>Emissions Overview</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Phase</th>
+            <th>Emissions (kg CO2)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Planning</td>
+            <td>150</td>
+        </tr>
+        <tr>
+            <td>Design</td>
+            <td>200</td>
+        </tr>
+        <tr>
+            <td>Construction</td>
+            <td>500</td>
+        </tr>
+        <tr>
+            <td>Commissioning</td>
+            <td>100</td>
+        </tr>
+        <tr>
+            <td>Operational</td>
+            <td>300</td>
+        </tr>
+        <tr>
+            <td>Maintenance</td>
+            <td>50</td>
+        </tr>
+        <tr>
+            <td>Evaluation</td>
+            <td>0</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Interactive Emissions Chart</h3>
+<div id="emissionsChart" style="width: 100%; height: 400px;"></div>
+
+<script>
+    // Sample data for the chart
+    const emissionsData = {
+        labels: ['Planning', 'Design', 'Construction', 'Commissioning', 'Operational', 'Maintenance', 'Evaluation'],
+        datasets: [{
+            label: 'Carbon Emissions (kg CO2)',
+            data: [150, 200, 500, 100, 300, 50, 0],
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    };
+
+    // Create the chart
+    const ctx = document.getElementById('emissionsChart').getContext('2d');
+    const emissionsChart = new Chart(ctx, {
+        type: 'bar',
+        data: emissionsData,
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+
+<h3>How You Can Help Reduce Emissions</h3>
+<ul>
+    <li>Use energy-efficient equipment and practices.</li>
+    <li>Minimize waste during construction and operations.</li>
+    <li>Encourage the use of sustainable materials.</li>
+    <li>Participate in carbon offset programs.</li>
+</ul>
+
+<a href="{{ url_for('main.project_phases') }}" class="btn btn-secondary">Back to Project Phases</a>
+{% endblock %} 

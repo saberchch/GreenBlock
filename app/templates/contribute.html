@@ -1,0 +1,44 @@
+<!-- app/templates/contribute.html -->
+{% extends 'base.html' %}
+
+{% block title %}Contribute to the Project{% endblock %}
+
+{% block content %}
+<h1>Contribute to the Project</h1>
+
+<p>We welcome your contributions to help improve our project. Please share your ideas, resources, or feedback below.</p>
+
+<h3>Guidelines for Contribution</h3>
+<ul>
+    <li>Be clear and concise in your descriptions.</li>
+    <li>Provide any relevant resources or references.</li>
+    <li>Ensure that your contributions align with the project's goals.</li>
+</ul>
+
+<form method="POST">
+    <div class="form-group">
+        <label for="contribution">Your Contribution:</label>
+        <textarea id="contribution" name="contribution" class="form-control" placeholder="Describe your contribution..." required></textarea>
+    </div>
+    <button type="submit" class="btn btn-success">Submit Contribution</button>
+</form>
+
+{% if contributions %}
+    <h3>Previous Contributions</h3>
+    <ul class="list-group mt-3">
+        {% for contribution in contributions %}
+            <li class="list-group-item">{{ contribution }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No contributions have been made yet.</p>
+{% endif %}
+
+{% if get_flashed_messages() %}
+    <div class="alert alert-success mt-3">
+        {{ get_flashed_messages()[0] }}
+    </div>
+{% endif %}
+
+<a href="{{ url_for('main.project_phases') }}" class="btn btn-secondary">Back to Project Phases</a>
+{% endblock %}

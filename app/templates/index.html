@@ -4,11 +4,27 @@
 
 {% block content %}
     <div class="jumbotron text-center">
-        <h1 class="display-4">Welcome to GreenLedger</h1>
-        <p class="lead">Your trusted platform for managing carbon emissions and environmental impact.</p>
+        <h1 class="display-4">Welcome to GreenLedger!</h1>
+        <p class="lead">Your platform for managing sustainable projects and contributions.</p>
         <hr class="my-4">
-        <p>Join us in making a difference. Register or log in to get started.</p>
-        <a class="btn btn-success btn-lg" href="{{ url_for('main.register') }}" role="button">Register</a>
-        <a class="btn btn-primary btn-lg" href="{{ url_for('main.login') }}" role="button">Login</a>
+        <p>Join us in making a positive impact on the environment through effective project management and collaboration.</p>
+        <a class="btn btn-primary btn-lg" href="{{ url_for('main.register') }}" role="button">Get Started</a>
+    </div>
+
+    <div class="container">
+        <h2>About Us</h2>
+        <p>GreenLedger is dedicated to promoting sustainability in engineering and construction projects. Our platform allows users to track carbon emissions, contribute to projects, and collaborate with other professionals in the field.</p>
+
+        <h2>Features</h2>
+        <ul class="list-group">
+            <li class="list-group-item">📊 Track your project's carbon emissions.</li>
+            <li class="list-group-item">🤝 Collaborate with engineers from various disciplines.</li>
+            <li class="list-group-item">📅 Stay updated with project phases and deadlines.</li>
+            <li class="list-group-item">📝 Contribute ideas and resources to ongoing projects.</li>
+        </ul>
+
+        <h2>Get Involved</h2>
+        <p>Whether you're an engineer, project manager, or just passionate about sustainability, we invite you to join our community. Sign up today to start contributing!</p>
+        <a class="btn btn-success" href="{{ url_for('main.register') }}">Sign Up</a>
     </div>
 {% endblock %}
