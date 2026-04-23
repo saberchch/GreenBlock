@@ -1,6 +1,6 @@
-# GreenLedger
+# GreenBlock
 
-GreenLedger is a carbon tax management platform designed to help engineers and organizations manage their carbon emissions and comply with environmental regulations. The application allows users to report carbon emissions, view their balance of carbon credits, and access transaction history, all while promoting sustainable practices.
+GreenBlock is a carbon tax management platform designed to help engineers and organizations manage their carbon emissions and comply with environmental regulations. The application allows users to report carbon emissions, view their balance of carbon credits, and access transaction history, all while promoting sustainable practices.
 
 ## Features
 
@@ -21,12 +21,12 @@ GreenLedger is a carbon tax management platform designed to help engineers and o
 
 ## Installation
 
-To set up the GreenLedger application locally, follow these steps:
+To set up the GreenBlock application locally, follow these steps:
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/saberchch/GreenLedger.git
-   cd GreenLedger
+   git clone https://github.com/saberchch/GreenBlock.git
+   cd GreenBlock
    ```
 
 2. **Create a Virtual Environment** (optional but recommended):
